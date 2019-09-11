@@ -1,9 +1,37 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.utils.data import Dataset, DataLoader
 
 import torch.optim as optim
 
+from mnist import MNIST 
+
+class TrainDataset(Dataset):
+    """Handwritten digits train dataset."""
+
+    def __init__(self):
+        self.train_data = MNIST('train_set')
+        self.images, self.labels = self.train_data.load_training()
+
+    def __len__(self):
+        return len(self.landmarks_frame)
+
+    def __getitem__(self, idx):
+        return self.labels, torch.tensor(self.images[idx])
+
+class TestDataset(Dataset):
+    """Handwritten digits test dataset."""
+
+    def __init__(self):
+        self.test_data = MNIST('test_set')
+        self.images, self.labels = self.test_data.load_testing()
+
+    def __len__(self):
+        return len(self.landmarks_frame)
+
+    def __getitem__(self, idx):
+        return self.labels, torch.tensor(self.images[idx])
 
 class Net(nn.Module):
 
@@ -14,7 +42,7 @@ class Net(nn.Module):
         self.conv1 = nn.Conv2d(1, 6, 3)
         self.conv2 = nn.Conv2d(6, 16, 3)
         # an affine operation: y = Wx + b
-        self.fc1 = nn.Linear(16 * 6 * 6, 120)  # 6*6 from image dimension
+        self.fc1 = nn.Linear(16 * 24 * 24, 120)  # 6*6 from image dimension
         self.fc2 = nn.Linear(120, 84)
         self.fc3 = nn.Linear(84, 10)
 
@@ -38,21 +66,23 @@ class Net(nn.Module):
 
 
 net = Net()
+train_data = TrainDataset()
 
-input = torch.randn(1, 1, 32, 32)
+label, input = train_data.__getitem__(0)
+# print(input.shape)
 output = net(input)
-target = torch.randn(10)
-target = target.view(1, -1)
-criterion = nn.MSELoss()
+# target = torch.randn(10)
+# target = target.view(1, -1)
+# criterion = nn.MSELoss()
 
-loss = criterion(output, target)
-print(loss)
+# loss = criterion(output, target)
+# print(loss)
 
-optimizer = optim.SGD(net.parameters(), lr=0.01)
+# optimizer = optim.SGD(net.parameters(), lr=0.01)
 
-# in your training loop:
-optimizer.zero_grad()   # zero the gradient buffers
-output = net(input)
-loss = criterion(output, target)
-loss.backward()
-optimizer.step()    #
+# # in your training loop:
+# optimizer.zero_grad()   # zero the gradient buffers
+# output = net(input)
+# loss = criterion(output, target)
+# loss.backward()
+# optimizer.step()
